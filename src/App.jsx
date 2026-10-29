@@ -5,6 +5,7 @@ import HomePage from './components/HomePage'
 import LollipopPhone from './components/LollipopPhone'
 import MusicPlayer from './components/MusicPlayer'
 import PhoneBook from './components/PhoneBook'
+import AddonLab from './components/AddonLab'
 
 const pages = {
   dungeons: { ko: '던전', en: 'DUNGEONS', symbol: '♢', intro: '처음 만나는 던전의 기록', copy: '길을 잃어도 괜찮습니다. 발견한 입구와 마주친 이야기를 천천히 기록해보세요.', items: ['던전의 첫인상', '보스와의 첫 만남', '함께 걷는 파티'] },
@@ -15,7 +16,7 @@ const pages = {
 
 const getPageFromHash = () => {
   const hash = window.location.hash.slice(1)
-  return hash && pages[hash] ? hash : 'home'
+  return hash && (pages[hash] || hash === 'addons') ? hash : 'home'
 }
 
 function App() {
@@ -24,7 +25,7 @@ function App() {
   const [page, setPage] = useState(getPageFromHash)
   const [phoneBookOpen, setPhoneBookOpen] = useState(false)
   const audioRef = useRef(null)
-  const nav = [['dungeons', '던전', 'DUNGEONS'], ['skills', '스킬', 'SKILLS'], ['classes', '직업', 'CLASSES'],  ['maps', '지도', 'MAPS']]
+  const nav = [['dungeons', '던전', 'DUNGEONS'], ['skills', '스킬', 'SKILLS'], ['classes', '직업', 'CLASSES'], ['maps', '지도', 'MAPS'], ['addons', '애드온', 'ADDONS']]
 
   useEffect(() => {
     const onHash = () => setPage(getPageFromHash())
@@ -44,7 +45,7 @@ function App() {
     <LollipopPhone onOpenPhoneBook={() => setPhoneBookOpen(true)} />
     {phoneBookOpen && <PhoneBook onClose={() => setPhoneBookOpen(false)} />}
     <MusicPlayer audioRef={audioRef} playing={playing} setPlaying={setPlaying} />
-    {page === 'home' ? <HomePage /> : <GuidePage data={pages[page]} navigate={navigate} />}
+    {page === 'home' ? <HomePage /> : page === 'addons' ? <AddonLab navigate={navigate} /> : <GuidePage data={pages[page]} navigate={navigate} />}
     <span id="schedule" hidden />
     <footer className="site-footer" data-section="site-footer"><div className="footer-brand">WOW DIARY <span>© 2026</span></div><p>여긴 공략글도 드랍정보도 없지만 낭만이 있지.낭만 와공쥬가 되어보자.</p><div className="footer-links"><a href="#home">HOME</a><a href="#schedule">ROADMAP</a><a href="#home">↑ TOP</a></div></footer>
   </div>
