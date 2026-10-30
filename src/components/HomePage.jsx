@@ -20,10 +20,10 @@ const ROADMAP_STOPS = [
 ]
 
 const RECENT_LOGS = [
-  { href: '#dungeons', label: '✿ 전사 버프됐대 오슈이야 ~' },
-  { href: '#skills', label: '✿ 사전준비때 캐릭생성 잊지말기 ' },
-  { href: '#classes', label: '✿ 나에게 맞는 직업 찾기' },
-  { href: '#maps', label: '✿ 우연히 발견한 작은 마을' },
+  { href: '#addons', label: '✿ 전사 버프됐대 오슈이야 ~' },
+  { href: '#home', label: '✿ 사전준비때 캐릭생성 잊지말기 ' },
+  { href: '#home', label: '✿ 나에게 맞는 직업 찾기' },
+  { href: '#home', label: '✿ 우연히 발견한 작은 마을' },
 ]
 
 const SCHEDULE_EVENTS = [
@@ -299,7 +299,7 @@ function RecentLogsSection() {
     <img className="home-cat-gif" src={catGif} alt="춤추는 고양이 장식" />
     {/*<img className="home-sparkle-gif" src={sparkleGif} alt="" />*/}
     <div className="log-list">
-      {RECENT_LOGS.map(({ href, label }) => <a href={href} key={href}>{label}</a>)}
+      {RECENT_LOGS.map(({ href, label }) => <a href={href} key={label}>{label}</a>)}
     </div>
     <p className="window-note">리쟈드짱의 업데이트 계속 기록해나갈게 ♡</p>
   </section>
