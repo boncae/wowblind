@@ -116,7 +116,7 @@ function AddonBuilder({ name, setName, selected, setSelected, result }) {
 
 export default function AddonLab({ navigate }) {
   const [name, setName] = useState('WowDiary')
-  const [selected, setSelected] = useState(['login', 'target'])
+  const [selected, setSelected] = useState(['login', 'nextitem'])
   const result = useMemo(() => buildAddon(name, selected), [name, selected])
 
   return <main className="guide-page addon-page" data-section="addons-page">

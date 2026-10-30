@@ -235,48 +235,193 @@ if info then print(info.name, "시전", info.castTime / 1000, "초") end`,
     lua: `PlaySound(888) -- 레벨업!
 PlaySound(8959, "Master") -- 레이드 경고`,
   },
+  {
+    id: 'GetInventoryItemLink', category: 'item', kind: 'function',
+    name: 'GetInventoryItemLink', sig: 'GetInventoryItemLink(unit, slotID)',
+    ko: '장비칸에 낀 아이템 링크. 비어 있으면 nil. 슬롯 번호는 1 머리, 2 목, 3 어깨, 5 가슴 … 16 주장비, 17 보조장비.',
+    returns: 'itemLink | nil',
+    lua: `local link = GetInventoryItemLink("player", 1) -- 머리
+if link then
+  print("머리:", link, "아이템 레벨", C_Item.GetDetailedItemLevelInfo(link))
+else
+  print("머리 칸이 비어 있어요!")
+end`,
+  },
+  {
+    id: 'C_Container', category: 'item', kind: 'function',
+    name: 'C_Container.GetContainerItemID', sig: 'C_Container.GetContainerNumSlots(bag), C_Container.GetContainerItemID(bag, slot)',
+    ko: '가방 뒤지기. 가방 번호 0(기본 가방)~4, 칸은 1부터. 특정 아이템을 갖고 있는지 확인할 때 써요.',
+    returns: 'itemID | nil',
+    lua: `local function HasItem(wantID)
+  for bag = 0, 4 do
+    for slot = 1, C_Container.GetContainerNumSlots(bag) do
+      if C_Container.GetContainerItemID(bag, slot) == wantID then return true end
+    end
+  end
+end
+print("귀환석 있음?", HasItem(6948) and "응" or "아니")`,
+  },
+  {
+    id: 'BAG_UPDATE_DELAYED', category: 'event', kind: 'event',
+    name: 'BAG_UPDATE_DELAYED', sig: 'event "BAG_UPDATE_DELAYED"',
+    ko: '가방 내용이 바뀌고 잠시 뒤 한 번 발생. 아이템을 주웠는지 확인하기에 BAG_UPDATE보다 가벼워요.',
+    returns: '—',
+    lua: `local f = CreateFrame("Frame")
+f:RegisterEvent("BAG_UPDATE_DELAYED")
+f:SetScript("OnEvent", function()
+  print("가방이 바뀌었어요")
+end)`,
+  },
+  {
+    id: 'SavedVariables', category: 'frame', kind: 'function',
+    name: 'SavedVariables (.toc)', sig: '## SavedVariables: MyAddonDB',
+    ko: '로그아웃해도 남는 저장소. .toc에 한 줄 적으면 그 이름의 전역 테이블이 자동으로 저장·복원돼요. 위시리스트, 설정 등에 사용.',
+    returns: '—',
+    lua: `-- MyAddon.toc 에 추가:  ## SavedVariables: MyAddonDB
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_LOGIN")
+f:SetScript("OnEvent", function()
+  MyAddonDB = MyAddonDB or { visits = 0 } -- 처음이면 만들기
+  MyAddonDB.visits = MyAddonDB.visits + 1
+  print("접속 횟수:", MyAddonDB.visits)
+end)`,
+  },
 ]
+
+
+// ---- 애드온 생성기 ----
+// 각 기능은 이벤트별 코드(on), 상단 보조 코드(setup), /명령어 하위 명령(slash)을 가질 수 있고,
+// 생성기가 같은 이벤트·명령어를 하나로 합쳐요. {NAME}은 애드온 이름으로 치환됩니다.
 
 export const ADDON_FEATURES = [
   {
     id: 'login', label: '접속 인사', hint: 'PLAYER_LOGIN · UnitName · print',
-    events: ['PLAYER_LOGIN'], uses: ['PLAYER_LOGIN', 'UnitName', 'print'],
-    handler: `  if event == "PLAYER_LOGIN" then
-    Say("안녕, " .. UnitName("player") .. "! 오늘도 낭만 모험 ✿")`,
+    uses: ['PLAYER_LOGIN', 'UnitName', 'print'],
+    on: { PLAYER_LOGIN: ['Say("안녕, " .. UnitName("player") .. "! 오늘도 낭만 모험 ✿")'] },
   },
   {
     id: 'target', label: '대상 체력 알려주기', hint: 'PLAYER_TARGET_CHANGED · UnitHealth',
-    events: ['PLAYER_TARGET_CHANGED'], uses: ['PLAYER_TARGET_CHANGED', 'UnitHealth', 'UnitLevel'],
-    handler: `  if event == "PLAYER_TARGET_CHANGED" and UnitExists("target") then
-    local hp, max = UnitHealth("target"), UnitHealthMax("target")
-    Say(string.format("%s  %d / %d (%.0f%%)", UnitName("target"), hp, max, hp / max * 100))`,
+    uses: ['PLAYER_TARGET_CHANGED', 'UnitHealth', 'UnitLevel'],
+    on: {
+      PLAYER_TARGET_CHANGED: [
+        'if UnitExists("target") then',
+        '  local hp, max = UnitHealth("target"), UnitHealthMax("target")',
+        '  Say(string.format("%s  %d / %d (%.0f%%)", UnitName("target"), hp, max, hp / max * 100))',
+        'end',
+      ],
+    },
   },
   {
     id: 'combat', label: '전투 시작·종료 알림', hint: 'PLAYER_REGEN_DISABLED / ENABLED',
-    events: ['PLAYER_REGEN_DISABLED', 'PLAYER_REGEN_ENABLED'], uses: ['PLAYER_REGEN'],
-    handler: `  if event == "PLAYER_REGEN_DISABLED" then
-    Say("⚔ 전투 시작! 바닥 조심")
-  elseif event == "PLAYER_REGEN_ENABLED" then
-    Say("✿ 전투 끝. 한숨 돌리기")`,
+    uses: ['PLAYER_REGEN'],
+    on: {
+      PLAYER_REGEN_DISABLED: ['Say("⚔ 전투 시작! 바닥 조심")'],
+      PLAYER_REGEN_ENABLED: ['Say("✿ 전투 끝. 한숨 돌리기")'],
+    },
   },
   {
     id: 'levelup', label: '레벨업 축하', hint: 'PLAYER_LEVEL_UP · PlaySound',
-    events: ['PLAYER_LEVEL_UP'], uses: ['PLAYER_LEVEL_UP', 'PlaySound'],
-    handler: `  if event == "PLAYER_LEVEL_UP" then
-    local level = ...
-    PlaySound(888)
-    Say("🎉 레벨 " .. level .. "! 축하해")`,
+    uses: ['PLAYER_LEVEL_UP', 'PlaySound'],
+    on: { PLAYER_LEVEL_UP: ['local level = ...', 'PlaySound(888)', 'Say("🎉 레벨 " .. level .. "! 축하해")'] },
   },
   {
     id: 'zone', label: '새 지역 도착 기록', hint: 'ZONE_CHANGED_NEW_AREA · GetRealZoneText',
-    events: ['ZONE_CHANGED_NEW_AREA'], uses: ['ZONE_CHANGED', 'GetRealZoneText'],
-    handler: `  if event == "ZONE_CHANGED_NEW_AREA" then
-    Say("✦ 도착: " .. GetRealZoneText())`,
+    uses: ['ZONE_CHANGED', 'GetRealZoneText'],
+    on: { ZONE_CHANGED_NEW_AREA: ['Say("✦ 도착: " .. GetRealZoneText())'] },
+  },
+  {
+    id: 'nextitem', label: '다음 필요한 아이템 알려주기', hint: 'GetInventoryItemLink · BAG_UPDATE_DELAYED · SavedVariables',
+    uses: ['GetInventoryItemLink', 'C_Container', 'BAG_UPDATE_DELAYED', 'SavedVariables', 'SlashCmd', 'GetItemInfo'],
+    savedVariables: true,
+    setup: `-- 장비칸 번호와 이름
+local SLOTS = {
+  {1, "머리"}, {2, "목"}, {3, "어깨"}, {15, "등"}, {5, "가슴"}, {9, "손목"}, {10, "손"},
+  {6, "허리"}, {7, "다리"}, {8, "발"}, {11, "반지1"}, {12, "반지2"},
+  {13, "장신구1"}, {14, "장신구2"}, {16, "주장비"}, {17, "보조장비"}, {18, "원거리"},
+}
+
+local function ItemLevelOf(link)
+  if C_Item and C_Item.GetDetailedItemLevelInfo then
+    return C_Item.GetDetailedItemLevelInfo(link) or 0
+  end
+  local info = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+  return select(4, info(link)) or 0
+end
+
+-- 비어 있는 칸 + 아이템 레벨이 가장 낮은 칸 = 다음에 필요한 아이템
+local function NextItem()
+  local empty, lowest = {}, nil
+  for _, s in ipairs(SLOTS) do
+    local link = GetInventoryItemLink("player", s[1])
+    if not link then
+      table.insert(empty, s[2])
+    else
+      local ilvl = ItemLevelOf(link)
+      if not lowest or ilvl < lowest.ilvl then
+        lowest = { name = s[2], ilvl = ilvl, link = link }
+      end
+    end
+  end
+  if #empty > 0 then Say("비어 있는 칸: " .. table.concat(empty, ", ")) end
+  if lowest then
+    Say(string.format("다음으로 바꿀 아이템 → %s (지금 %s, 아이템 레벨 %d)", lowest.name, lowest.link, lowest.ilvl))
+  end
+  local wish = {NAME}DB and {NAME}DB.wish
+  if wish and next(wish) then
+    local names = {}
+    for _, name in pairs(wish) do table.insert(names, name) end
+    Say("찾는 중: " .. table.concat(names, ", "))
+  end
+end
+
+-- 가방에 위시리스트 아이템이 들어왔는지 확인
+local function WishlistCheck()
+  local wish = {NAME}DB and {NAME}DB.wish
+  if not wish or not next(wish) then return end
+  for bag = 0, 4 do
+    for slot = 1, (C_Container.GetContainerNumSlots(bag) or 0) do
+      local id = C_Container.GetContainerItemID(bag, slot)
+      if id and wish[id] then
+        PlaySound(888)
+        Say("✿ 찾던 아이템 획득! " .. wish[id])
+        wish[id] = nil
+      end
+    end
+  end
+end`,
+    on: {
+      PLAYER_LOGIN: ['{NAME}DB = {NAME}DB or { wish = {} }', 'C_Timer.After(3, NextItem)'],
+      BAG_UPDATE_DELAYED: ['WishlistCheck()'],
+    },
+    slash: {
+      next: { help: '다음 필요한 아이템 보기', body: ['NextItem()'] },
+      want: {
+        help: '[아이템링크] 위시리스트에 추가 (Shift+클릭으로 링크 넣기)',
+        body: [
+          'local id = tonumber(rest:match("item:(%d+)"))',
+          'if id then',
+          '  local name = C_Item.GetItemInfo(id) or ("item:" .. id)',
+          '  {NAME}DB.wish[id] = name',
+          '  Say("위시리스트 추가: " .. name)',
+          'else',
+          '  Say("아이템을 Shift+클릭해서 넣어주세요: /{CMD} want [아이템]")',
+          'end',
+        ],
+      },
+      list: {
+        help: '위시리스트 보기',
+        body: [
+          'local n = 0',
+          'for id, name in pairs({NAME}DB.wish) do n = n + 1; Say(n .. ". " .. name) end',
+          'if n == 0 then Say("위시리스트가 비어 있어요. /{CMD} want [아이템] 으로 추가!") end',
+        ],
+      },
+    },
   },
   {
     id: 'slash', label: '/명령어로 내 돈 보기', hint: 'SlashCmdList · GetMoney',
-    events: [], uses: ['SlashCmd', 'GetMoney'],
-    slash: true,
+    uses: ['SlashCmd', 'GetMoney'],
+    slash: { money: { help: '가진 돈 보기', body: ['Say("가진 돈: " .. C_CurrencyInfo.GetCoinTextureString(GetMoney()))'] } },
   },
 ]
 
@@ -286,18 +431,29 @@ const sanitizeName = (raw) => {
   return /^[0-9]/.test(name) ? `A${name}` : name
 }
 
+const indent = (lines, depth) => lines.map((l) => (l ? ' '.repeat(depth) + l : l))
+
 export function buildAddon(rawName, selectedIds) {
   const name = sanitizeName(rawName)
+  const cmd = name.toLowerCase()
+  const fill = (s) => s.replaceAll('{NAME}', name).replaceAll('{CMD}', cmd)
   const features = ADDON_FEATURES.filter((f) => selectedIds.includes(f.id))
-  const events = [...new Set(features.flatMap((f) => f.events))]
-  const handlers = features.filter((f) => f.handler)
-  const slash = features.find((f) => f.slash)
+
+  // 이벤트별로 코드 합치기 (기능 순서 유지)
+  const events = new Map()
+  features.forEach((f) => Object.entries(f.on || {}).forEach(([ev, body]) => {
+    if (!events.has(ev)) events.set(ev, [])
+    events.get(ev).push(...body)
+  }))
+  const slashCmds = Object.assign({}, ...features.map((f) => f.slash || {}))
+  const hasSlash = Object.keys(slashCmds).length > 0
+  const savedVars = features.some((f) => f.savedVariables)
 
   const toc = `## Interface: 120000
 ## Title: |cffff9dcc${name}|r
 ## Notes: WOW DIARY 애드온 공방에서 만든 첫 애드온 ✿
 ## Author: 낭만 와공쥬
-## Version: 0.1.0
+## Version: 0.1.0${savedVars ? `\n## SavedVariables: ${name}DB` : ''}
 # Interface 숫자는 게임 안에서 /dump select(4, GetBuildInfo()) 로 확인한 값으로 바꿔주세요.
 
 ${name}.lua
@@ -313,29 +469,34 @@ ${name}.lua
     `end`,
   ]
 
-  if (events.length > 0) {
+  features.filter((f) => f.setup).forEach((f) => lines.push(``, fill(f.setup)))
+
+  if (events.size > 0) {
     lines.push(``, `local frame = CreateFrame("Frame")`)
-    events.forEach((e) => lines.push(`frame:RegisterEvent("${e}")`))
+    events.forEach((_, ev) => lines.push(`frame:RegisterEvent("${ev}")`))
     lines.push(``, `frame:SetScript("OnEvent", function(self, event, ...)`)
-    handlers.forEach((f, i) => {
-      const body = i === 0 ? f.handler : f.handler.replace(/^ {2}if /, '  elseif ')
-      lines.push(body)
+    let first = true
+    events.forEach((body, ev) => {
+      lines.push(`  ${first ? 'if' : 'elseif'} event == "${ev}" then`, ...indent(body.map(fill), 4))
+      first = false
     })
     lines.push(`  end`, `end)`)
   }
 
-  if (slash) {
+  if (hasSlash) {
     const key = name.toUpperCase()
-    lines.push(
-      ``,
-      `SLASH_${key}1 = "/${name.toLowerCase()}"`,
-      `SlashCmdList["${key}"] = function(msg)`,
-      `  Say("가진 돈: " .. C_CurrencyInfo.GetCoinTextureString(GetMoney()))`,
-      `end`,
-    )
+    const help = Object.entries(slashCmds).map(([sub, c]) => `/${cmd} ${sub} — ${c.help}`).join('  |  ')
+    lines.push(``, `SLASH_${key}1 = "/${cmd}"`, `SlashCmdList["${key}"] = function(msg)`,
+      `  local sub, rest = msg:match("^(%S*)%s*(.-)$")`)
+    let first = true
+    Object.entries(slashCmds).forEach(([sub, c]) => {
+      lines.push(`  ${first ? 'if' : 'elseif'} sub == "${sub}" then`, ...indent(c.body.map(fill), 4))
+      first = false
+    })
+    lines.push(`  else`, `    Say("명령어: ${fill(help)}")`, `  end`, `end`)
   }
 
-  if (events.length === 0 && !slash) {
+  if (events.size === 0 && !hasSlash) {
     lines.push(``, `-- 왼쪽에서 기능을 하나 골라보세요 ✿`)
   }
 
