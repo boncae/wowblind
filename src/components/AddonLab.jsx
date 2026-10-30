@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ADDON_FEATURES, API_CATEGORIES, WOW_API, buildAddon } from '../data/wowApi'
+import { ADDON_CATEGORIES, ADDON_LIST, ADDON_LIST_NOTE } from '../data/addonList'
 
 const copyText = async (text) => {
   try { await navigator.clipboard.writeText(text); return true } catch { return false }
@@ -106,10 +107,48 @@ function AddonBuilder({ name, setName, selected, setSelected, result }) {
     <div className="addon-howto">
       <strong>설치 방법</strong>
       <ol>
-        <li><code>World of Warcraft/_retail_/Interface/AddOns/</code> 안에 <code>{result.name}</code> 폴더 만들기</li>
+        <li><code>World of Warcraft/_forever_/Interface/AddOns/</code> 안에 <code>{result.name}</code> 폴더 만들기</li>
         <li>다운로드한 <code>{result.name}.toc</code>, <code>{result.name}.lua</code> 두 파일을 그 폴더에 넣기</li>
         <li>게임 재시작 (또는 <code>/reload</code>) 후 캐릭터 선택 화면 애드온 목록에서 확인</li>
       </ol>
+    </div>
+  </section>
+}
+
+const STATUS_META = {
+  ok: { label: '포에버 지원', cls: 'ok' },
+  care: { label: '확인하고 쓰기', cls: 'care' },
+  no: { label: '아직 미지원', cls: 'no' },
+}
+
+function AddonList() {
+  const [category, setCategory] = useState('all')
+  const list = ADDON_LIST.filter((a) => category === 'all' || a.category === category)
+
+  return <section className="window addon-window addon-list-window" data-section="addon-list" data-title="추천애드온.exe">
+    <p className="home-modal-lead">직접 만들기 전에, 다들 쓰는 애드온부터 깔아두면 편해요. 포에버에서 되는 것만 모았어요 ✿</p>
+    <div className="api-chips">
+      {ADDON_CATEGORIES.map((c) => <button className={`api-chip ${category === c.id ? 'active' : ''}`} type="button" key={c.id} onClick={() => setCategory(c.id)}>{c.label}</button>)}
+    </div>
+    <div className="addon-list">
+      {list.map((a) => <a className={`addon-item status-${a.status}`} href={a.url} target="_blank" rel="noopener noreferrer" key={a.name}>
+        <div className="addon-item-head">
+          <strong>{a.name}</strong>
+          {a.tag && <i className="addon-item-tag">{a.tag}</i>}
+          <span className={`addon-status ${STATUS_META[a.status].cls}`}>{STATUS_META[a.status].label}</span>
+        </div>
+        <p>{a.ko}</p>
+        <small>{ADDON_CATEGORIES.find((c) => c.id === a.category)?.label} · 다운로드 ↗</small>
+      </a>)}
+    </div>
+    <div className="addon-howto">
+      <strong>설치 팁</strong>
+      <ol>
+        <li>애드온 폴더는 <code>World of Warcraft/_forever_/Interface/AddOns/</code> (리테일의 <code>_retail_</code>이 아니에요!)</li>
+        <li>CurseForge 앱을 쓰면 게임을 "World of Warcraft: Forever"로 골라야 맞는 파일을 받아요</li>
+        <li>클래식 시대(Classic Era)용 파일은 포에버에서 "오래된 버전"으로 뜨고 오류가 날 수 있어요</li>
+      </ol>
+      <small className="api-source">{ADDON_LIST_NOTE} 출처: <a href="https://endgametools.com/en/wow-forever/news/wow-forever-addons" target="_blank" rel="noopener noreferrer">endgametools ↗</a>, <a href="https://www.gfinityesports.com/article/8-best-curseforge-add-ons-you-need-to-install-for-world-of-warcraft-forever" target="_blank" rel="noopener noreferrer">Gfinity ↗</a></small>
     </div>
   </section>
 }
@@ -137,6 +176,7 @@ export default function AddonLab({ navigate }) {
         <ApiDictionary usedIds={result.uses} />
         <AddonBuilder name={name} setName={setName} selected={selected} setSelected={setSelected} result={result} />
       </div>
+      <AddonList />
       <a className="button back-button" href="#home" onClick={() => navigate('home')}>처음으로 돌아가기 <b>↗</b></a>
     </div>
   </main>

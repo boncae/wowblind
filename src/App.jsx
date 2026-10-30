@@ -18,7 +18,7 @@ function App() {
   const [page, setPage] = useState(getPageFromHash)
   const [phoneBookOpen, setPhoneBookOpen] = useState(false)
   const audioRef = useRef(null)
-  const nav = [['addons', '애드온', 'ADDONS']]
+  const nav = [['addons', '애드온 공방', 'ADDON LAB']]
 
   useEffect(() => {
     const onHash = () => setPage(getPageFromHash())

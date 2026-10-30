@@ -449,12 +449,12 @@ export function buildAddon(rawName, selectedIds) {
   const hasSlash = Object.keys(slashCmds).length > 0
   const savedVars = features.some((f) => f.savedVariables)
 
-  const toc = `## Interface: 120000
+  const toc = `## Interface: 16001
 ## Title: |cffff9dcc${name}|r
 ## Notes: WOW DIARY 애드온 공방에서 만든 첫 애드온 ✿
 ## Author: 낭만 와공쥬
 ## Version: 0.1.0${savedVars ? `\n## SavedVariables: ${name}DB` : ''}
-# Interface 숫자는 게임 안에서 /dump select(4, GetBuildInfo()) 로 확인한 값으로 바꿔주세요.
+# 16001 = 포에버(1.60.x). 다르면 게임 안에서 /dump select(4, GetBuildInfo()) 값으로 바꿔주세요.
 
 ${name}.lua
 `
