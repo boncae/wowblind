@@ -121,13 +121,19 @@ export default function AddonLab({ navigate }) {
 
   return <main className="guide-page addon-page" data-section="addons-page">
     <div className="guide-main">
-      <section className="guide-hero" data-section="guide-hero">
-        <div className="section-kicker">05 / ADDONS</div>
-        <div className="guide-title"><span className="guide-symbol">⌘</span><h1>애드온 공방<small>ADDON LAB</small></h1></div>
-        <p className="guide-intro">내 손으로 만드는 첫 애드온<small>DOCS → CODE</small></p>
-        <p className="guide-copy">와우 애드온은 Lua라는 작은 언어로 만들어요. 왼쪽 사전에서 API를 읽고, 오른쪽에서 체크만 하면 진짜 동작하는 애드온 파일이 나옵니다. 처음엔 접속 인사 하나면 충분해요.</p>
+      <section className="window addon-hero" data-section="addon-hero" data-title="애드온공방.exe">
+        <div className="addon-hero-text">
+          <span className="addon-hero-kicker">ADDON LAB · DOCS → CODE</span>
+          <h1>애드온 공방<small>내 손으로 만드는 첫 애드온</small></h1>
+          <p>와우 애드온은 Lua라는 작은 언어로 만들어요. 코딩 몰라도 괜찮아요. 사전에서 읽고, 체크만 하면 진짜 동작하는 애드온 파일이 나옵니다.</p>
+        </div>
+        <ol className="addon-hero-steps">
+          <li><b>01</b><span>API 사전에서<br />함수 읽어보기</span></li>
+          <li><b>02</b><span>원하는 기능<br />체크하기</span></li>
+          <li><b>03</b><span>파일 받아서<br />AddOns 폴더에</span></li>
+        </ol>
       </section>
-      <div className="addon-grid">
+      <div className="addon-grid addon-grid-tight">
         <ApiDictionary usedIds={result.uses} />
         <AddonBuilder name={name} setName={setName} selected={selected} setSelected={setSelected} result={result} />
       </div>

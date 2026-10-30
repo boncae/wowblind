@@ -2441,3 +2441,112 @@ a:hover {
         max-height: 480px;
     }
 }
+
+/* ===== 애드온 공방 헤더 ===== */
+.addon-hero {
+    align-items: center;
+    display: grid;
+    gap: 20px;
+    grid-template-columns: 1.4fr 1fr;
+    min-width: 0;
+    padding: 38px 22px 20px;
+}
+
+.addon-hero-kicker {
+    color: #b34280;
+    display: block;
+    font: 10px "NeoDunggeunmoPro", "Press Start 2P", monospace;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.addon-hero h1 {
+    color: #b3206b;
+    font: 700 clamp(40px, 5vw, 64px)/1 "Jersey 10", sans-serif;
+    margin: 0 0 10px;
+    text-shadow: 2px 2px #fff;
+}
+
+.addon-hero h1 small {
+    color: var(--deep);
+    display: block;
+    font: 700 15px "Noto Sans KR", sans-serif;
+    margin-top: 6px;
+}
+
+.addon-hero p {
+    line-height: 1.8;
+    margin: 0;
+    max-width: 520px;
+}
+
+.addon-hero-steps {
+    counter-reset: none;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(3, 1fr);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.addon-hero-steps li {
+    background: #fff;
+    border: 2px dashed #ffb6da;
+    display: grid;
+    gap: 6px;
+    min-height: 96px;
+    padding: 10px;
+    position: relative;
+    text-align: center;
+}
+
+.addon-hero-steps li + li:before {
+    color: var(--hot);
+    content: "→";
+    font-size: 16px;
+    font-weight: 900;
+    left: -12px;
+    position: absolute;
+    top: 38%;
+}
+
+.addon-hero-steps b {
+    color: var(--hot);
+    font: 10px "NeoDunggeunmoPro", "Press Start 2P", monospace;
+}
+
+.addon-hero-steps span {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+    .addon-hero {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .addon-hero-steps li + li:before {
+        display: none;
+    }
+
+    .addon-hero-steps span {
+        font-size: 11px;
+    }
+}
+
+.addon-grid-tight {
+    margin-top: 18px;
+}
+
+/* 애드온 공방에서는 전화기를 왼쪽 아래 구석으로 */
+.page-shell[data-page="addons"] .lollipop-phone {
+    bottom: 3vh;
+    left: 2vw;
+    top: auto;
+    transform: rotate(-6deg) scale(.78);
+    transform-origin: bottom left;
+}
